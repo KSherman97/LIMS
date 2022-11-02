@@ -1,0 +1,458 @@
+﻿@page
+@model LIMS.EmployeeModel
+@{
+    ViewData["Title"] = "Employee";
+}
+
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery AntiForgery;
+
+@if (Model.HttpContext.Session.GetString("accountType") != "manager"
+&& Model.HttpContext.Session.GetString("accountType") != "employee")
+{
+    <script>
+        location.replace("/Index");
+    </script>
+}
+else
+{
+<div class="container w-100">
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="checkout-tab" data-toggle="tab" href="#checkout" role="tab" aria-controls="checkout" aria-selected="true">Checkout</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="add-books-tab" data-toggle="tab" href="#add-books" role="tab" aria-controls="add-books" aria-selected="false">Add Books</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="add-copies-tab" data-toggle="tab" href="#add-copies" role="tab" aria-controls="add-copies" aria-selected="false">Add Copies</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="users-info-tab" data-toggle="tab" href="#users-info" role="tab" aria-controls="users-info" aria-selected="false">User Info</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="books-info-tab" data-toggle="tab" href="#books-info" role="tab" aria-controls="books-info" aria-selected="false">Book Info</a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="checkout" role="tabpanel" aria-labelledby="checkout-tab">
+            <div class="d-flex">
+                <ul class="list-group mx-auto mt-4">
+                    <li id="checkout-header" class="list-group-item list-group-item-warning">
+                        Checkout Book
+                    </li>
+                    <li class="list-group-item">
+                        <div class="form-row">
+                            <div class="form-group col-lg-3">
+                                <input type="number" class="form-control" id="checkout-bookid" placeholder="BookId">
+                            </div>
+                            <div class="form-group col-lg-6">
+                                <input type="text" class="form-control" id="checkout-username" placeholder="Username">
+                            </div>
+                            <div class="form-group col-lg-3">
+                                <button id="checkout-button" class="btn btn-outline-success">Submit</button>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="add-books" role="tabpanel" aria-labelledby="add-books-tab">
+            <div class="d-flex">
+                <ul class="list-group mx-auto mt-4">
+                    <li id="add-books-header" class="list-group-item list-group-item-warning">
+                        Add a new book
+                    </li>
+                    <li class="list-group-item">
+                        <div class="">
+                            <div class="form-group custom-control">
+                                <label for="book-isbn">ISBN</label>
+                                <input id="book-isbn" type="text" class="form-control" placeholder="123-1234567890" required />
+                            </div>
+
+                            <div class="form-group custom-control">
+                                <label for="book-title">Title</label>
+                                <input id="book-title" class="form-control" required />
+                            </div>
+
+                            <div class="form-group custom-control">
+                                <label for="book-genre">Genre</label>
+                                <input id="book-genre" class="form-control" required />
+                            </div>
+
+                            <div class="form-group custom-control">
+                                <label for="book-author">Author</label>
+                                <input id="book-author" class="form-control" required />
+                            </div>
+
+                            <!-- <div class="form-group custom-control">
+                                <label for="book-date-published">Date Published</label>
+                                <input id="book-date-published" class="form-control" required />
+                            </div>
+                            -->
+                            <div class="form-group custom-control">
+                                <label for="book-summary">Summary</label>
+                                <textarea id="book-summary" class="form-control" required></textarea>
+                            </div>
+
+                            <div class="custom-file w-100">
+                                <input type="file" class="custom-file-input ml-5" id="book-image" required>
+                                <label class="custom-file-label ml-4" for="book-image">Choose file...</label>
+                                <input id="book-image-base64" type="text" hidden/>
+                                <div class="invalid-feedback">Provide an image for the book thumbnail</div>
+                            </div>
+
+                            <div class="form-group w-100 text-center">
+                                <button id="book-button" class="btn btn-outline-success w-75 mt-3">Submit form</button>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="add-copies" role="tabpanel" aria-labelledby="add-copies-tab">
+            <div class="d-flex">
+                <ul class="list-group mx-auto mt-4">
+                    <li id="add-books-header" class="list-group-item list-group-item-warning">
+                        Add a copy of a book
+                    </li>
+                    <li class="list-group-item">
+                        <div class="">
+                            <div class="form-group custom-control">
+                                <label for="copy-isbn">ISBN</label>
+                                <input id="copy-isbn" type="text" class="form-control" placeholder="123-1234567890" required />
+                            </div>
+                            <div class="form-group custom-control">
+                                <label for="copy-condition">Condition</label>
+                                <input id="copy-condition" type="text" class="form-control" placeholder="book condition">
+                            </div>
+                            <div class="form-group custom-control">
+                                <label for="copy-location">Location</label>
+                                <input id="copy-location" type="text" class="form-control" placeholder="location">
+                            </div>
+                            <div class="form-group w-100 text-center">
+                                <button id="copy-button" class="btn btn-outline-success w-75 mt-3">Submit</button>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="users-info" role="tabpanel" aria-labelledby="users-info-tab">
+            <div class="d-flex w-100">
+                <table class="table table-hover table-striped mx-auto mt-4">
+                    <thead id="users-header">
+                        <tr>
+                            <th scope="col">
+                                Username
+                            </th>
+                            <th scope="col">
+                                Userid
+                            </th>
+                            <th scope="col">
+                                Name
+                            </th>
+                            <th scope="col">
+                                Address
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.UserInfoList)
+                        {
+                            <tr scope="row">
+                                <td scope="col">
+                                    @row.Username
+                                </td>
+                                <td scope="col">
+                                    @row.UserId
+                                </td>
+                                <td scope="col">
+                                    @row.FirstName @row.LastName
+                                </td>
+                                <td scope="col">
+                                    @row.Address
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="books-info" role="tabpanel" aria-labelledby="books-info-tab">
+            <div class="d-flex w-100">
+                <table class="table table-hover table-striped mx-auto mt-4">
+                    <thead id="users-header">
+                        <tr>
+                            <th scope="col">
+                                BookId
+                            </th>
+                            <th scope="col">
+                                ISBN
+                            </th>
+                            <th scope="col">
+                                Availability
+                            </th>
+                            <th scope="col">
+                                Location
+                            </th>
+                            <th scope="col">
+                                Condition
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.BookInfoList)
+                        {
+                            <tr scope="row">
+                                <td scope="col">
+                                    @row.BookId
+                                </td>
+                                <td scope="col">
+                                    @row.ISBN
+                                </td>
+                                <td scope="col">
+                                    @row.Availability
+                                </td>
+                                <td scope="col">
+                                    @row.Location
+                                </td>
+                                <td scope="col">
+                                    @row.Condition
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+}
+
+    <script>
+    $(document).ready(function () {
+        // Initialize tooltips
+        $(function () {
+          $('[data-toggle="tooltip"]').tooltip()
+        })
+
+        function encodeImageFileAsURL(element) {
+
+        }
+
+
+        $('#book-image').on('change', function () {
+            // update label
+            let fileName = $(this).val().split('\\').pop(); 
+            $(this).next('.custom-file-label').addClass("selected").html(fileName);
+
+            // set $("#book-image-base64") to the base64 of the file
+            var reader = new FileReader();
+            var file = $(this).get(0).files[0];
+
+            console.log(file);
+
+            reader.onloadend = function() {
+                $("#book-image-base64").val(reader.result);
+                console.log('RESULT', $("#book-image-base64").val());
+            }
+
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        });
+
+
+        $("#checkout-button").on("click", function () {
+            var bookId = $("#checkout-bookid").val().trim();
+            var username = $("#checkout-username").val().trim();
+            // ToDo: Validate input
+            if (false) {
+                createToast("alert","Please provide a valid input",125)
+            } else {
+                var postData = {
+                    action: 'checkout',
+                    data: JSON.stringify({
+                        bookId: bookId,
+                        username: username
+                    })
+                }
+                console.log(postData);
+                $("#checkout-button").prop("disabled", true);
+                $("#checkout-button").addClass("bg-secondary text-white");
+
+                $.ajax({
+                    type: "POST",
+                    url: "Employee",
+                    dataType: "json",
+                    contentType: "application/json; charset=utf-8",
+                    headers: {
+                        'RequestVerificationToken': '@AntiForgery.GetAndStoreTokens(HttpContext).RequestToken'
+                    },
+                    data: JSON.stringify(postData),
+                    success: function (data) {
+                        console.log("Successfully sent ajax addBook!");
+                        console.log(data);
+                        var json = JSON.parse(data);
+                        if (json.success === "False") {
+                            if (json.reason === "unknown") {
+                                createToast("alert", "There was an internal error processing your checkout!", 125);
+                            } else if (json.reason === "badUsername") {
+                                createToast("alert", "Invalid username!", 125)
+                            } else if (json.reason === "badBookId") {
+                                createToast("alert", "Invalid bookId!", 125);
+                            } else if (json.reason === "multipleCheckout") {
+                                createToast("alert", "User has a book checked out already!", 125);
+                            } else if (json.reason === "unavailable" || json.reason === "reserved") {
+                                createToast("alert", "Book is not available (either checked out or reserved by another user)!", 125);
+                            }
+                        } else {
+                            createToast("success", "The book has been checked out!", 125);
+                        }
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        // CHECK REASON FOR ERROR IN data
+                        console.log("AJAX POST ERROR");
+                        console.log(xhr);
+                        console.log(textStatus);
+                        console.log(errorThrown);
+                        createToast("alert", "There was an internal error processing your checkout!", 125);
+                    }
+                }); // END of AJAX
+                $("#checkout-button").prop("disabled", false);
+                $("#checkout-button").removeClass("bg-secondary text-white");
+            }
+        }); // END of checkout
+
+
+        $("#book-button").on("click", function () {
+            var isbn = $("#book-isbn").val().trim().replace("-","");
+            var title = $("#book-title").val().trim();
+            var author = $("#book-author").val().trim();
+            var genre = $("#book-genre").val().trim();
+            var summary = $("#book-summary").val().trim();
+            var image = $("#book-image-base64").val();
+            var imageName = $("#book-image").val().replace('C:\\fakepath\\',"").replace("/","");
+            // ToDo: Validate input
+            if (isbn.length != 13) {
+                createToast("alert", "Please provide a valid isbn", 125);
+            } else {
+                var postData = {
+                    action: 'addBook',
+                    data: JSON.stringify({
+                        isbn: isbn,
+                        title: title,
+                        genre: genre,
+                        author: author,
+                        summary: summary,
+                        imageName: imageName,
+                        image: image
+                    })
+                }
+                console.log(postData);
+                $("#book-button").prop("disabled", true);
+                $("#book-button").addClass("bg-secondary text-white");
+
+                $.ajax({
+                    type: "POST",
+                    url: "Employee",
+                    dataType: "json",
+                    contentType: "application/json; charset=utf-8",
+                    headers: {
+                        'RequestVerificationToken': '@AntiForgery.GetAndStoreTokens(HttpContext).RequestToken'
+                    },
+                    data: JSON.stringify(postData),
+                    success: function (data) {
+                        console.log("Successfully sent ajax addBook request!");
+                        console.log(data);
+                        var json = JSON.parse(data);
+                        if (json.success === "False") {
+                            if (json.reason === "unknown") {
+                                createToast("alert", "There was an internal error processing your form!", 125);
+                            } else if (json.reason === "badUsername") {
+                                createToast("alert", "Invalid username!", 125)
+                            }
+                        } else {
+                            createToast("success", "The book has been added!", 125);
+                        }
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        // CHECK REASON FOR ERROR IN data
+                        console.log("AJAX POST ERROR");
+                        console.log(xhr);
+                        console.log(textStatus);
+                        console.log(errorThrown);
+                        createToast("alert", "There was an internal error processing your form!", 125);
+                    }
+                }); // END of AJAX
+                $("#book-button").prop("disabled", false);
+                $("#book-button").removeClass("bg-secondary text-white");
+            }
+        }); // END of addBook
+
+
+        $("#copy-button").on("click", function () {
+            var isbn = $("#copy-isbn").val().trim().replace("-","");
+            var condition = $("#copy-condition").val().trim();
+            var location = $("#copy-location").val().trim();
+            // ToDo: Validate input
+            if (isbn.length != 13) {
+                createToast("alert","Please provide a valid input",125)
+            } else {
+                var postData = {
+                    action: 'addCopy',
+                    data: JSON.stringify({
+                        isbn: isbn,
+                        condition: condition,
+                        location: location,
+                    })
+                }
+                console.log(postData);
+                $("#copy-button").prop("disabled", true);
+                $("#copy-button").addClass("bg-secondary text-white");
+
+                $.ajax({
+                    type: "POST",
+                    url: "Employee",
+                    dataType: "json",
+                    contentType: "application/json; charset=utf-8",
+                    headers: {
+                        'RequestVerificationToken': '@AntiForgery.GetAndStoreTokens(HttpContext).RequestToken'
+                    },
+                    data: JSON.stringify(postData),
+                    success: function (data) {
+                        console.log("Successfully sent ajax addBook request!");
+                        console.log(data);
+                        var json = JSON.parse(data);
+                        if (json.success === "False") {
+                            if (json.reason === "unknown") {
+                                createToast("alert", "There was an internal error processing your form!", 125);
+                            } else if (json.reason === "unavailable") {
+                                createToast("alert", "Book is not available (either checked out or reserved by another user)!", 125);
+                            }
+                        } else {
+                            createToast("success", "The book copy has been added!", 125);
+                        }
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        // CHECK REASON FOR ERROR IN data
+                        console.log("AJAX POST ERROR");
+                        console.log(xhr);
+                        console.log(textStatus);
+                        console.log(errorThrown);
+                        createToast("alert", "There was an internal error processing your form!", 125);
+                    }
+                }); // END of AJAX
+                $("#copy-button").prop("disabled", false);
+                $("#copy-button").removeClass("bg-secondary text-white");
+            }
+        }); // END of addCopy
+    });
+    </script>

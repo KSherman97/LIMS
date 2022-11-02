@@ -1,0 +1,35 @@
+﻿@page
+@model LIMS.SearchModel
+@{
+    ViewData["Title"] = "Search";
+}
+
+
+<div class="container w-75">
+    <div class="jumbotron jumbotron-fluid">
+        <div class="container">
+            <h1 class="display-4">Search Results</h1>
+            <h4>for Books with @Model.Filter containing "@Model.Search.Replace("%","")"</h4>
+        </div>
+    </div>
+    @foreach (var row in Model.Results)
+    {
+
+        <div class="card mb-3">
+            <div class="row no-gutters">
+                <div class="col-md-4">
+                    <a href="/Item?isbn=@row["ISBN"]"><img src="~/images/@row["imagePath"]" class="card-img" alt="~/images/placeholder.gif"></a>
+                </div>
+                <div class="col-md-8">
+                    <div class="card-body">
+                        <a href=/Item?isbn=@row["ISBN"]><h5 class="card-title">@row["title"]</h5></a>
+                        <p class="card-text">By: @row["author"]</p>
+                        <p class="card-text"><small class="text-muted">@row["genre"]</small></p>
+                        <p class="card-text">@row["summary"]</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+

@@ -1,0 +1,298 @@
+﻿@page
+@model LIMS.ManagerModel
+@{
+    ViewData["Title"] = "Manager";
+}
+
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery AntiForgery;
+
+@if (Model.HttpContext.Session.GetString("accountType") != "manager")
+{
+    <script>
+        location.replace("/Index");
+    </script>
+}
+else
+{
+<div class="container w-100">
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="orders-tab" data-toggle="tab" href="#orders" role="tab" aria-controls="orders" aria-selected="true">Orders</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="requests-tab" data-toggle="tab" href="#requests" role="tab" aria-controls="requests" aria-selected="false">Requests</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="add-orders-tab" data-toggle="tab" href="#add-orders" role="tab" aria-controls="add-orders" aria-selected="false">Add Orders</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="recieved-orders-tab" data-toggle="tab" href="#recieved-orders" role="tab" aria-controls="recieved-orders" aria-selected="false">Recieve Orders</a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="orders" role="tabpanel" aria-labelledby="orders-tab">
+            <div class="d-flex w-100">
+                <table class="table table-hover table-striped mx-auto mt-4">
+                    <thead id="users-header">
+                        <tr>
+                            <th scope="col">
+                                OrderID
+                            </th>
+                            <th scope="col">
+                                ISBN
+                            </th>
+                            <th scope="col">
+                                Quantity
+                            </th>
+                            <th scope="col">
+                                Date Ordered
+                            </th>
+                            <th scope="col">
+                                Date Expected
+                            </th>
+                            <th scope="col">
+                                Date Recieved
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.OrderList)
+                        {
+                            <tr scope="row">
+                                <td scope="col">
+                                    @row.OrderId
+                                </td>
+                                <td scope="col">
+                                    @row.ISBN
+                                </td>
+                                <td scope="col">
+                                    @row.Quantity
+                                </td>
+                                <td scope="col">
+                                    @row.DateOrdered
+                                </td>
+                                <td scope="col">
+                                    @row.DateExpected
+                                </td>
+                                <td scope="col">
+                                    @row.DateRecieved
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="requests" role="tabpanel" aria-labelledby="requests-tab">
+            <div class="d-flex">
+                <table class="table table-hover table-striped mx-auto mt-4">
+                    <thead id="users-header">
+                        <tr>
+                            <th scope="col">
+                                ISBN
+                            </th>
+                            <th scope="col">
+                                User Count
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.BookRequestList)
+                        {
+                            <tr scope="row">
+                                <td scope="col">
+                                    @row.ISBN
+                                </td>
+                                <td scope="col">
+                                    @row.UserCount
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="add-orders" role="tabpanel" aria-labelledby="add-orders-tab">
+            <div class="d-flex w-100">
+                <ul class="list-group mx-auto mt-4">
+                    <li id="add-orders-header" class="list-group-item list-group-item-warning">
+                        Add an order
+                    </li>
+                    <li class="list-group-item">
+                        <div class="">
+                            <div class="form-group custom-control">
+                                <label for="isbn">ISBN</label>
+                                <input id="isbn" type="text" class="form-control" placeholder="123-1234567890" required />
+                            </div>
+                            <div class="form-group custom-control">
+                                <label for="quantity">Quantity</label>
+                                <input id="quantity" type="number" class="form-control" placeholder="quantity" required>
+                            </div>
+                            <div class="form-group custom-control">
+                                <label for="date-ordered">Date Ordered</label>
+                                <input id="date-ordered" type="date" class="form-control" placeholder="11 March 2019" required>
+                            </div>
+                            <div class="form-group custom-control">
+                                <label for="date-expected">Date Expected</label>
+                                <input id="date-expected" type="date" class="form-control" placeholder="11 March 2019">
+                            </div>
+                            <div class="form-group w-100 text-center">
+                                <button id="order-button" class="btn btn-outline-success w-75 mt-3">Submit</button>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="recieved-orders" role="tabpanel" aria-labelledby="recieved-orders-tab">
+            <div class="d-flex w-100">
+                <ul class="list-group mx-auto mt-4">
+                    <li id="recieved-orders-header" class="list-group-item list-group-item-warning">
+                        Mark an order as recieved
+                    </li>
+                    <li class="list-group-item">
+                        <div class="">
+                            <div class="form-group custom-control">
+                                <label for="order-id">Order ID</label>
+                                <input id="order-id" type="number" class="form-control" placeholder="order id" required>
+                            </div>
+                            <div class="form-group custom-control">
+                                <label for="date-recieved">Date Recieved</label>
+                                <input id="date-recieved" type="date" class="form-control" placeholder="11 March 2019">
+                            </div>
+                            <div class="form-group w-100 text-center">
+                                <button id="recieved-button" class="btn btn-outline-success w-75 mt-3">Submit</button>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+}
+
+<script>
+    $(document).ready(function () {
+        // Initialize tooltips
+        $(function () {
+          $('[data-toggle="tooltip"]').tooltip()
+        })
+
+        $("#order-button").on("click", function () {
+            var isbn = $("#isbn").val().trim().replace("-","");
+            var quantity = $("#quantity").val().trim();
+            var dateOrdered = $("#date-ordered").val().trim();
+            var dateExpected = $("#date-expected").val().trim();
+            if (isbn.length != 13) {
+                createToast("alert","Please provide a valid input",125)
+            } else {
+                var postData = {
+                    action: 'addOrder',
+                    data: JSON.stringify({
+                        isbn: isbn,
+                        quantity: quantity,
+                        dateOrdered: dateOrdered,
+                        dateExpected: dateExpected
+                    })
+                }
+                console.log(postData);
+                $("#order-button").prop("disabled", true);
+                $("#order-button").addClass("bg-secondary text-white");
+
+                $.ajax({
+                    type: "POST",
+                    url: "Manager",
+                    dataType: "json",
+                    contentType: "application/json; charset=utf-8",
+                    headers: {
+                        'RequestVerificationToken': '@AntiForgery.GetAndStoreTokens(HttpContext).RequestToken'
+                    },
+                    data: JSON.stringify(postData),
+                    success: function (data) {
+                        console.log("Successfully sent ajax order!");
+                        console.log(data);
+                        var json = JSON.parse(data);
+                        if (json.success === "False") {
+                            if (json.reason === "unknown") {
+                                createToast("alert", "There was an internal error processing your order!", 125);
+                            }
+                        } else {
+                            createToast("success", "The order has been added!", 125);
+                        }
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        // CHECK REASON FOR ERROR IN data
+                        console.log("AJAX POST ERROR");
+                        console.log(xhr);
+                        console.log(textStatus);
+                        console.log(errorThrown);
+                        createToast("alert", "There was an internal error processing your order!", 125);
+                    }
+                }); // END of AJAX
+                $("#order-button").prop("disabled", false);
+                $("#order-button").removeClass("bg-secondary text-white");
+            }
+        }); // END of add order
+
+        $("#recieved-button").on("click", function () {
+            var orderId = $("#order-id").val().trim();
+            var dateRecieved = $("#date-recieved").val().trim();
+            if (false) {
+                createToast("alert","Please provide a valid input",125)
+            } else {
+                var postData = {
+                    action: 'recieveOrder',
+                    data: JSON.stringify({
+                        orderId: orderId,
+                        dateRecieved: dateRecieved
+                    })
+                }
+                console.log(postData);
+                $("#recieved-button").prop("disabled", true);
+                $("#recieved-button").addClass("bg-secondary text-white");
+
+                $.ajax({
+                    type: "POST",
+                    url: "Manager",
+                    dataType: "json",
+                    contentType: "application/json; charset=utf-8",
+                    headers: {
+                        'RequestVerificationToken': '@AntiForgery.GetAndStoreTokens(HttpContext).RequestToken'
+                    },
+                    data: JSON.stringify(postData),
+                    success: function (data) {
+                        console.log("Successfully sent ajax checkout!");
+                        console.log(data);
+                        var json = JSON.parse(data);
+                        if (json.success === "False") {
+                            if (json.reason === "unknown") {
+                                createToast("alert", "There was an internal error processing your order!", 125);
+                            }
+                        } else {
+                            createToast("success", "The order has been marked as recieved!", 125);
+                        }
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        // CHECK REASON FOR ERROR IN data
+                        console.log("AJAX POST ERROR");
+                        console.log(xhr);
+                        console.log(textStatus);
+                        console.log(errorThrown);
+                        createToast("alert", "There was an internal error processing your order!", 125);
+                    }
+                }); // END of AJAX
+                $("#recieved-button").prop("disabled", false);
+                $("#recieved-button").removeClass("bg-secondary text-white");
+            }
+        }); // END of add order
+
+    });
+</script>
+

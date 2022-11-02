@@ -1,0 +1,89 @@
+﻿@page
+@model LIMS.LoginModel
+@{
+    ViewData["Title"] = "Login";
+}
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery AntiForgery;
+
+<div class="container w-75">
+    <div>
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input id="username" type="text" class="form-control" name="username">
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input id="password" type="password" class="form-control" name="password">
+        </div>
+        <div class="form-group d-flex">
+            <a asp-page="Register" class="mr-auto">Don't have an account? Register here!</a>
+            <button id="login-button" class="btn btn-primary">Submit</button>
+        </div>
+    </div>
+</div>
+
+@if (Model.HttpContext.Session.GetString("userId") != null)
+{
+    <script>
+        location.replace("/Index");
+    </script>
+}
+<script>
+    $(document).ready(function () {
+
+        if ("@Model.Action" === "register") {
+            createToast("success", "Congratulations! Your registration was successful!");
+        } else if ("@Model.Action" === "logout") {
+            createToast("success", "You've been logout, see you soon!");
+        }
+
+        $("#login-button").on("click", function () {
+            var postData = {
+                action: 'login',
+                username: $("#username").val(),
+                password: $("#password").val()
+            }
+            $("#login-button").prop("disabled", true);
+            $("#login-button").addClass("bg-secondary text-white");
+
+            $.ajax({
+                type: "POST",
+                url: "Login",
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                headers: {
+                    'RequestVerificationToken': '@AntiForgery.GetAndStoreTokens(HttpContext).RequestToken'
+                },
+                data: JSON.stringify(postData),
+                success: function (data) {
+                    console.log("Successfully sent ajax request!");
+                    console.log(data);
+                    var json = JSON.parse(data);
+                    if (json.success === "False") {
+                        if (json.reason === "incorrect") {
+                            createToast("alert", "Your login attempt was unsuccessful...")
+                        } else if (json.reason === "unknown") {
+                            createToast("alert", "There was an internal error processing your request!");
+                        }
+                        $("#login-button").prop("disabled", false);
+                        $("#login-button").removeClass("bg-secondary text-white");
+                    } else {
+                        location.replace("/Index");
+                    }
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    // CHECK REASON FOR ERROR IN data
+                    console.log("AJAX POST ERROR");
+                    console.log(xhr);
+                    console.log(textStatus);
+                    console.log(errorThrown);
+                    createToast("alert", "There was an internal error processing your request!");
+                    $("#login-button").prop("disabled", false);
+                    $("#login-button").removeClass("bg-secondary text-white");
+                }
+            }); // END of AJAX
+        }); // END of login
+    });
+</script>

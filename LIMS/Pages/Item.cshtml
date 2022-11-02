@@ -1,0 +1,229 @@
+﻿@page
+@model LIMS.ItemModel
+@{
+    ViewData["Title"] = "Item";
+}
+
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery AntiForgery;
+
+    <div class="container w-100">
+        <div class="row d-flex justify-content-center">
+            <div class="d-flex col-6 mb-1">
+                <img src="~/images/@Model.ImagePath" class="d-block w-100 align-self-center" alt="">
+            </div>
+            <div class="col text-center mb-1">
+                <ul class="list-group">
+                    <li id="title-header" class="list-group-item list-group-item-warning">
+                        Title
+                    </li>
+                    <li id="title" class="list-group-item">
+                        @Model.Title
+                    </li>
+                    <li id="author-header" class="list-group-item list-group-item-warning">
+                        Author
+                    </li>
+                    <li id="author" class="list-group-item">
+                        @Model.Author
+                    </li>
+                    <li id="genre-header" class="list-group-item list-group-item-warning">
+                        Genre
+                    </li>
+                    <li id="genre" class="list-group-item">
+                        @Model.Genre
+                    </li>
+                    <!--<li id="date-published-header" class="list-group-item list-group-item-warning">
+                        Date Published
+                    </li>
+                    <li id="date-published" class="list-group-item">
+                        Model.DatePublished
+                    </li>-->
+                    <li id="isbn-header" class="list-group-item list-group-item-warning">
+                        ISBN
+                    </li>
+                    <li id="isbn" class="list-group-item">
+                        @Model.ISBN
+                    </li>
+                    @if (Model.HttpContext.Session.GetString("accountType") == "user")
+                    {
+                        <li id="reserve" class="list-group-item">
+                            <div class="row">
+                                <div id="reserve-text" class="col-lg-6">
+                                    We have available copies!
+                                </div>
+                                <div class="col-lg-6">
+                                    <button id="reserve-button" class="btn list-group-item-warning">Reserve this book</button>
+                                </div>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+        <div class="row text-center">
+            <div class="col mb-1">
+                <div class="card-header">
+                    Summary
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li id="summary " class="list-group-item">
+                        @Model.Summary
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        @if (Model.HttpContext.Session.GetString("accountType") == "user")
+        {
+            <div class="row text-center">
+                <div class="col mb-1">
+                    <div class="card-header">
+                        Reviews
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Write a review</span>
+                                </div>
+                                <textarea id="user-review" class="form-control" aria-label="Write a review"></textarea>
+                                <div class="input-group-append">
+                                    <button id="review-button" class="btn btn-outline-success">Send</button>
+                                </div>
+                            </div>
+                        </li>
+                        @if (Model.Reviews.Count != 0)
+                        {
+                            @foreach (var review in Model.Reviews)
+                            {
+                                <li class="list-group-item">
+                                    @review.ReviewText
+                                    <br />
+                                    <small>- @review.Username</small>
+                                </li>
+                            }
+                        }
+                        else
+                        {
+                            <li class="list-group-item">
+                                Be the first to review this book!
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
+    </div>
+
+<script>
+    $(document).ready(function () {
+
+        if ("@Model.HasAvailableCopies" !== "True") {
+            $("#reserve-text").text("No copies available!");
+            $("#reserve-button").prop("disabled", true);
+            $("#reserve-button").addClass("bg-secondary text-white");
+        }
+
+        if ("@Model.HasBookReserved" === "True") {
+            $("#reserve-text").text("You can only reserve one book at a time!");
+            $("#reserve-button").prop("disabled", true);
+            $("#reserve-button").addClass("bg-secondary text-white");
+        }
+
+        $("#reserve-button").on("click", function () {
+            $("#reserve-button").prop("disabled", true);
+            $("#reserve-button").addClass("bg-secondary text-white");
+
+            console.log("Reserve book: Starting AJAX");
+            var postData = {
+                action: 'reserve',
+                isbn: $("#isbn").text().trim(),
+                data: 'none'
+            };
+
+            console.log(postData);
+
+            $.ajax({
+                type: "POST",
+                url: "Item",
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                headers: {
+                    'RequestVerificationToken': '@AntiForgery.GetAndStoreTokens(HttpContext).RequestToken'
+                },
+                data: JSON.stringify(postData),
+                success: function (data) {
+                    console.log("Successfully sent ajax request!");
+                    console.log(data);
+                    var json = JSON.parse(data);
+                    if (json.success === "False") {
+                        // TODO: CHECK WHAT THE PROBLEM WAS
+                        createToast("alert", "There was an error reserving your book!",125);
+                        $("#reserve-button").prop("disabled", false);
+                        $("#reserve-button").removeClass("bg-secondary text-white");
+
+                    } else {
+                        createToast("success", "The book has been reserved!",125);
+                    }
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    // CHECK REASON FOR ERROR IN data
+                    console.log("AJAX POST ERROR");
+                    console.log(xhr);
+                    console.log(textStatus);
+                    console.log(errorThrown);
+                    createToast("alert", "There was an internal error processing your request!",125);
+                    $("#reserve-button").prop("disabled", false);
+                    $("#reserve-button").removeClass("bg-secondary text-white");
+                }
+            }); // END of AJAX
+        }); // END of reserveBook
+
+        $("#review-button").on("click", function () {
+            $("#review-button").prop("disabled", true);
+
+            console.log("Review book: Starting AJAX");
+            var postData = {
+                action: 'review',
+                isbn: $("#isbn").text().trim(),
+                data: $("#user-review").val().trim()
+            };
+
+            console.log(postData);
+
+            $.ajax({
+                type: "POST",
+                url: "Item",
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                headers: {
+                    'RequestVerificationToken': '@AntiForgery.GetAndStoreTokens(HttpContext).RequestToken'
+                },
+                data: JSON.stringify(postData),
+                success: function (data) {
+                    console.log("Successfully sent ajax request!");
+                    console.log(data);
+                    var json = JSON.parse(data);
+                    if (json.success === "False") {
+                        // TODO: CHECK WHAT THE PROBLEM WAS
+                        createToast("alert", "There was an error sending your review!",125);
+                    } else {
+                        createToast("success", "Your review has been sent!",125);
+                    }
+                    $("#review-button").prop("disabled", false);
+
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    // CHECK REASON FOR ERROR IN data
+                    console.log("AJAX POST ERROR");
+                    console.log(xhr);
+                    console.log(textStatus);
+                    console.log(errorThrown);
+                    createToast("alert", "There was an internal error processing your request!",125);
+                    $("#review-button").prop("disabled", false);
+                }
+            }); // END of AJAX
+        }); // END of reviewBook
+    });
+</script>

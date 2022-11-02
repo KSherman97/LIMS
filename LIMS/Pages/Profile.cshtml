@@ -1,0 +1,110 @@
+﻿@page
+@model LIMS.ProfileModel
+@{
+    ViewData["Title"] = "Profile";
+}
+
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery AntiForgery;
+
+<div class="container w-100">
+    <div class="row d-flex justify-content-center">
+        <div class="col-8 mb-1">
+            <ul class="list-group">
+                <li id="profile-header" class="list-group-item list-group-item-warning">
+                    Profile
+                </li>
+                <li class="list-group-item">
+                    Username: @Model.Username
+                </li>
+                <li class="list-group-item">
+                    Name:     @Model.FirstName @Model.LastName
+                </li>
+                <li class="list-group-item">
+                    Address:  @Model.Address, @Model.City, @Model.State, @Model.Zip
+                </li>
+                <li class="list-group-item">
+                    Phone:    @Model.Phone
+                </li>
+            </ul>
+        </div>
+        <div class="mb-1">
+            <ul class="list-group">
+                <li id="request-header" class="list-group-item list-group-item-warning">
+                    Request a Book
+                </li>
+                <li class="list-group-item needs-validation">
+                    <div class="input-group">
+                        <input id="isbn" type="text" class="form-control" placeholder="978-0441013593" data-toggle="tooltip" data-placement="left" title="ISBN-13 of the requested book" required>
+                        <div class="input-group-append">
+                            <button id="request-button" class="btn btn-outline-success form-control" type="submit">→</button>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    $(document).ready(function () {
+        // Initialize tooltips
+        $(function () {
+          $('[data-toggle="tooltip"]').tooltip()
+        })
+
+        $("#request-button").on("click", function () {
+            var isbn = $("#isbn").val().trim().replace('-', "");
+            var reg = /([^\d])/;
+            if (isbn.length != 13 || reg.test(isbn)) {
+                createToast("alert","Please provide a valid ISBN-13",125)
+            } else {
+                var postData = {
+                    action: 'request',
+                    data: isbn,
+                }
+                console.log(postData);
+                $("#request-button").prop("disabled", true);
+                $("#request-button").addClass("bg-secondary text-white");
+
+                $.ajax({
+                    type: "POST",
+                    url: "Profile",
+                    dataType: "json",
+                    contentType: "application/json; charset=utf-8",
+                    headers: {
+                        'RequestVerificationToken': '@AntiForgery.GetAndStoreTokens(HttpContext).RequestToken'
+                    },
+                    data: JSON.stringify(postData),
+                    success: function (data) {
+                        console.log("Successfully sent ajax request!");
+                        console.log(data);
+                        var json = JSON.parse(data);
+                        if (json.success === "False") {
+                            if (json.reason === "incorrect") {
+                                createToast("alert", "Your request attempt was unsuccessful!", 125)
+                            } else if (json.reason === "unknown") {
+                                createToast("alert", "There was an internal error processing your request!", 125);
+                            }
+                        } else {
+                            createToast("success", "Your book request has been placed!", 125);
+                        }
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        // CHECK REASON FOR ERROR IN data
+                        console.log("AJAX POST ERROR");
+                        console.log(xhr);
+                        console.log(textStatus);
+                        console.log(errorThrown);
+                        createToast("alert", "There was an internal error processing your request!", 125);
+                    }
+                }); // END of AJAX
+                $("#request-button").prop("disabled", false);
+                $("#request-button").removeClass("bg-secondary text-white");
+            }
+        }); // END of request
+
+    });
+</script>
