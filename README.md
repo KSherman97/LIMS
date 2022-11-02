@@ -7,6 +7,9 @@ library inventory tracking system using C# as the base language and MySQL
 as the DBMS. The intended users of the application are employees at a library 
 as well as library customers. 
 
+### User Interface Demo  
+![UI Demo](imgs/UI%20-%20Demo.gif)
+
 ### Dependencies
 + Visual Studio 2019
     - ASP.NET and web development
